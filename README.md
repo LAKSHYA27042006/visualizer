@@ -52,6 +52,14 @@ A full-stack, developer-grade Operating Systems simulation web application featu
 - **Spawn Process Modal (`fork() + execve()`):**
   - Validation for process names, parent PID selector, interactive priority slider, burst time, and RAM allocation.
 
+### 4. CPU Scheduling Lab & Gantt Chart (New in `dev` branch)
+- **Multi-Algorithm Simulation:** Support for FCFS, SJF (Non-preemptive), SRTF (Preemptive SJF), Round Robin (customizable time quantum), and Priority scheduling.
+- **Interactive Gantt Chart Timeline:** Real-time visual timeline showing time slices, process execution intervals, and CPU idle blocks.
+- **Detailed Mathematical Metrics:** Automatically computes Completion Time ($CT$), Turnaround Time ($TAT = CT - AT$), Waiting Time ($WT = TAT - BT$), and CPU Utilization.
+- **Side-by-Side Algorithm Benchmark:** Benchmarks all 5 scheduling algorithms simultaneously on the same workload.
+- **Workload Editor:** Add custom processes with arrival times, burst times, and priorities.
+
+
 ---
 
 ## 🛠️ Technology Stack

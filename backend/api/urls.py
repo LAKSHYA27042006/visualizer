@@ -12,6 +12,7 @@ urlpatterns = [
     path('simulation/', views.simulation_status, name='simulation-status'),
     path('simulation/step/', views.simulation_step, name='simulation-step'),
     path('simulation/config/', views.simulation_config, name='simulation-config'),
+    path('simulation/benchmark/', views.simulation_benchmark, name='simulation-benchmark'),
     
     path('logs/', views.kernel_logs, name='kernel-logs'),
     path('state-flow/', views.state_flow_diagram_data, name='state-flow-diagram'),

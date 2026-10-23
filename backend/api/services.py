@@ -279,3 +279,190 @@ def step_simulation():
 
     state.save()
     return state
+
+
+def calculate_cpu_scheduling(algorithm, processes, quantum=3):
+    """
+    Simulates CPU scheduling algorithms (FCFS, SJF, SRTF, RR, Priority)
+    and computes Gantt chart timeline slices and metrics (TAT, WT, CT).
+    """
+    if not processes:
+        return {'timeline': [], 'results': [], 'avgTAT': 0, 'avgWT': 0, 'cpuUtilization': 0}
+
+    proc_list = [
+        {
+            'pid': p.get('pid', i + 1),
+            'name': p.get('name', f"P{i+1}"),
+            'at': int(p.get('arrivalTime', 0)),
+            'bt': int(p.get('burstTime', 1)),
+            'rem': int(p.get('burstTime', 1)),
+            'priority': int(p.get('priority', 5)),
+            'color': p.get('color', '#38bdf8'),
+        }
+        for i, p in enumerate(processes)
+    ]
+
+    time = 0
+    completed = 0
+    n = len(proc_list)
+    timeline = []
+    finish_times = {}
+
+    if algorithm == 'FCFS':
+        proc_list.sort(key=lambda x: (x['at'], x['pid']))
+        for p in proc_list:
+            if time < p['at']:
+                time = p['at']
+            start = time
+            time += p['bt']
+            timeline.append({'pid': p['pid'], 'name': p['name'], 'start': start, 'end': time, 'color': p['color']})
+            finish_times[p['pid']] = time
+
+    elif algorithm == 'SJF':
+        # Non-preemptive Shortest Job First
+        while completed < n:
+            available = [p for p in proc_list if p['at'] <= time and p['rem'] > 0]
+            if not available:
+                next_arr = min(p['at'] for p in proc_list if p['rem'] > 0)
+                time = next_arr
+                continue
+            available.sort(key=lambda x: (x['bt'], x['at']))
+            p = available[0]
+            start = time
+            time += p['bt']
+            p['rem'] = 0
+            completed += 1
+            timeline.append({'pid': p['pid'], 'name': p['name'], 'start': start, 'end': time, 'color': p['color']})
+            finish_times[p['pid']] = time
+
+    elif algorithm == 'SRTF':
+        # Preemptive Shortest Remaining Time First
+        current_pid = None
+        current_start = 0
+        while completed < n:
+            available = [p for p in proc_list if p['at'] <= time and p['rem'] > 0]
+            if not available:
+                if current_pid is not None:
+                    p = next(x for x in proc_list if x['pid'] == current_pid)
+                    timeline.append({'pid': p['pid'], 'name': p['name'], 'start': current_start, 'end': time, 'color': p['color']})
+                    current_pid = None
+                time += 1
+                continue
+
+            available.sort(key=lambda x: (x['rem'], x['at']))
+            best = available[0]
+
+            if current_pid != best['pid']:
+                if current_pid is not None:
+                    p = next(x for x in proc_list if x['pid'] == current_pid)
+                    timeline.append({'pid': p['pid'], 'name': p['name'], 'start': current_start, 'end': time, 'color': p['color']})
+                current_pid = best['pid']
+                current_start = time
+
+            best['rem'] -= 1
+            time += 1
+
+            if best['rem'] == 0:
+                completed += 1
+                finish_times[best['pid']] = time
+                timeline.append({'pid': best['pid'], 'name': best['name'], 'start': current_start, 'end': time, 'color': best['color']})
+                current_pid = None
+
+    elif algorithm == 'RR':
+        # Round Robin
+        queue = []
+        in_queue = set()
+        proc_list.sort(key=lambda x: x['at'])
+
+        # Find first arrival
+        time = proc_list[0]['at']
+        for p in proc_list:
+            if p['at'] <= time and p['pid'] not in in_queue:
+                queue.append(p)
+                in_queue.add(p['pid'])
+
+        while completed < n:
+            if not queue:
+                unstarted = [p for p in proc_list if p['rem'] > 0]
+                if not unstarted:
+                    break
+                next_arr = min(p['at'] for p in unstarted)
+                time = next_arr
+                for p in proc_list:
+                    if p['at'] <= time and p['pid'] not in in_queue and p['rem'] > 0:
+                        queue.append(p)
+                        in_queue.add(p['pid'])
+                continue
+
+            p = queue.pop(0)
+            in_queue.remove(p['pid'])
+            run_time = min(quantum, p['rem'])
+            start = time
+            time += run_time
+            p['rem'] -= run_time
+            timeline.append({'pid': p['pid'], 'name': p['name'], 'start': start, 'end': time, 'color': p['color']})
+
+            # Add newly arrived processes during this quantum
+            for other in proc_list:
+                if other['at'] <= time and other['pid'] not in in_queue and other['rem'] > 0 and other['pid'] != p['pid']:
+                    queue.append(other)
+                    in_queue.add(other['pid'])
+
+            if p['rem'] > 0:
+                queue.append(p)
+                in_queue.add(p['pid'])
+            else:
+                completed += 1
+                finish_times[p['pid']] = time
+
+    elif algorithm == 'PRIORITY':
+        # Priority Scheduling (Lower priority number = higher priority)
+        while completed < n:
+            available = [p for p in proc_list if p['at'] <= time and p['rem'] > 0]
+            if not available:
+                next_arr = min(p['at'] for p in proc_list if p['rem'] > 0)
+                time = next_arr
+                continue
+            available.sort(key=lambda x: (x['priority'], x['at']))
+            p = available[0]
+            start = time
+            time += p['bt']
+            p['rem'] = 0
+            completed += 1
+            timeline.append({'pid': p['pid'], 'name': p['name'], 'start': start, 'end': time, 'color': p['color']})
+            finish_times[p['pid']] = time
+
+    # Calculate metrics
+    results = []
+    total_tat = 0
+    total_wt = 0
+    for p in proc_list:
+        ct = finish_times.get(p['pid'], p['at'] + p['bt'])
+        tat = ct - p['at']
+        wt = tat - p['bt']
+        total_tat += tat
+        total_wt += wt
+        results.append({
+            'pid': p['pid'],
+            'name': p['name'],
+            'arrivalTime': p['at'],
+            'burstTime': p['bt'],
+            'priority': p['priority'],
+            'completionTime': ct,
+            'turnaroundTime': tat,
+            'waitingTime': wt,
+            'color': p['color'],
+        })
+
+    total_busy = sum(p['bt'] for p in proc_list)
+    cpu_util = round((total_busy / max(1, time)) * 100, 1)
+
+    return {
+        'timeline': timeline,
+        'results': results,
+        'avgTAT': round(total_tat / max(1, n), 2),
+        'avgWT': round(total_wt / max(1, n), 2),
+        'cpuUtilization': min(100, cpu_util),
+        'totalTime': time,
+    }
+

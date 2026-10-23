@@ -128,4 +128,17 @@ export const api = {
       transitions: Array<{ from: string; to: string; trigger: string; description: string }>;
       processes: Process[];
     }>('/state-flow/'),
+
+  runBenchmark: (data: { algorithm: string; processes: any[]; quantum?: number }) =>
+    request<{
+      timeline: Array<{ pid: number; name: string; start: number; end: number; color: string }>;
+      results: Array<any>;
+      avgTAT: number;
+      avgWT: number;
+      cpuUtilization: number;
+      totalTime: number;
+    }>('/simulation/benchmark/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };

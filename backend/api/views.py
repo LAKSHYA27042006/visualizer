@@ -12,7 +12,8 @@ from .services import (
     reap_terminated_processes,
     step_simulation,
     get_simulation_state,
-    log_event
+    log_event,
+    calculate_cpu_scheduling,
 )
 
 
@@ -206,3 +207,15 @@ def state_flow_diagram_data(request):
         'transitions': transitions,
         'processes': procs
     })
+
+
+@api_view(['POST'])
+def simulation_benchmark(request):
+    data = request.data or {}
+    algorithm = data.get('algorithm', 'RR')
+    processes = data.get('processes', [])
+    quantum = int(data.get('quantum', 3))
+
+    result = calculate_cpu_scheduling(algorithm, processes, quantum)
+    return Response(result)
+

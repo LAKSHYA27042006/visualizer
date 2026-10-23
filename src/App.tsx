@@ -7,11 +7,14 @@ import {
   Clock,
   Sparkles,
   Server,
+  CalendarClock,
+  GitBranch,
 } from 'lucide-react';
 import { OSProvider, useOS, COLOR } from './context/OSContext';
 import { OverviewDashboard } from './components/OverviewDashboard';
 import { ForkTree } from './components/ForkTree';
 import { ProcessManager } from './components/ProcessManager';
+import { CpuSchedulingLab } from './components/CpuSchedulingLab';
 import { Inspector } from './components/Inspector';
 import { CreateModal } from './components/CreateModal';
 import { Eyebrow } from './components/Common';
@@ -20,6 +23,7 @@ const PAGES = [
   { path: '/dashboard', label: 'Overview', sub: 'Kernel at a glance', icon: LayoutDashboard },
   { path: '/fork-tree', label: 'Fork Tree', sub: '3D process lineage', icon: GitFork },
   { path: '/processes', label: 'Process Manager', sub: 'Process table & state flow', icon: ListTree },
+  { path: '/scheduling-lab', label: 'Scheduling Lab', sub: 'Gantt chart & algorithms', icon: CalendarClock },
 ];
 
 function MainShell() {
@@ -201,6 +205,20 @@ function MainShell() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span
                 className="chip mono"
+                style={{
+                  background: 'rgba(255,122,89,0.12)',
+                  color: '#ff7a59',
+                  border: '1px solid rgba(255,122,89,0.3)',
+                  fontSize: 11,
+                  padding: '6px 12px',
+                }}
+              >
+                <GitBranch size={12} />
+                dev branch
+              </span>
+
+              <span
+                className="chip mono"
                 style={{ background: '#fff', border: '1px solid var(--hair)', fontSize: 11, padding: '6px 12px' }}
               >
                 <Clock size={12} color="#3b82f6" />
@@ -229,6 +247,7 @@ function MainShell() {
             {path === '/processes' && (
               <ProcessManager onInspect={setInspect} openCreate={() => setCreating(true)} />
             )}
+            {path === '/scheduling-lab' && <CpuSchedulingLab />}
           </div>
         </main>
       </div>
